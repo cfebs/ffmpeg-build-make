@@ -38,6 +38,10 @@ LIBAOM_SRC := https://aomedia.googlesource.com/aom/+archive/refs/heads/$(LIBAOM_
 
 $(CACHE_DIR)/prereq:
 	@mkdir -p $(CACHE_DIR) $(DL_DIR) $(SRC_DIR) $(WORKSPACE) $(OUT_BIN_DIR)
+	hash -r tar
+	hash -r curl
+	hash -r make
+	hash -r autoreconf
 	touch $@
 
 ## yasm
@@ -163,7 +167,7 @@ $(DL_DIR)/ffmpeg-$(FFMPEG_VERSION).tar.gz: $(CACHE_DIR)/prereq
 	curl -L $(FFMPEG_SRC) -o $@ && \
 		tar -tvf >/dev/null $@ || rm -f $@
 
-$(CACHE_DIR)/ffmpeg: $(CACHE_DIR)/yasm $(CACHE_DIR)/nasm $(CACHE_DIR)/x264 $(CACHE_DIR)/x265 $(CACHE_DIR)/libvpx $(CACHE_DIR)/libfdkaac $(CACHE_DIR)/libmp3lame $(CACHE_DIR)/libopus $(CACHE_DIR)/libaom $(DL_DIR)/ffmpeg-$(FFMPEG_VERSION).tar.gz
+$(CACHE_DIR)/ffmpeg: $(DL_DIR)/ffmpeg-$(FFMPEG_VERSION).tar.gz | $(CACHE_DIR)/yasm $(CACHE_DIR)/nasm $(CACHE_DIR)/x264 $(CACHE_DIR)/x265 $(CACHE_DIR)/libvpx $(CACHE_DIR)/libfdkaac $(CACHE_DIR)/libmp3lame $(CACHE_DIR)/libopus $(CACHE_DIR)/libaom
 	tar -xvf $< -C $(SRC_DIR) && \
 		cd $(SRC_DIR)/ffmpeg && \
 		PKG_CONFIG_PATH="$(WORKSPACE)/lib/pkgconfig" ./configure \
@@ -172,7 +176,7 @@ $(CACHE_DIR)/ffmpeg: $(CACHE_DIR)/yasm $(CACHE_DIR)/nasm $(CACHE_DIR)/x264 $(CAC
 		  --extra-cflags="-I$(WORKSPACE)/include" \
 		  --extra-ldflags="-L$(WORKSPACE)/lib" \
 		  --extra-libs="-lpthread -lm" \
-		  --bindir="$(WORKSPACE)/bin" \
+		  --bindir="$(OUT_BIN_DIR)" \
 		  --enable-gpl \
 		  --enable-libaom \
 		  --enable-libass \
