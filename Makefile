@@ -2,7 +2,7 @@ JOBS := $(shell nproc)
 WORKSPACE := $(PWD)/workspace
 DIR := $(PWD)/
 CACHE_DIR := $(PWD)/.cache
-DL_DIR := $(PWD)/$(DL_DIR)
+DL_DIR := $(PWD)/.dl
 SRC_DIR := $(PWD)/.src
 OUT_BIN_DIR := $(PWD)/bin
 
@@ -36,118 +36,118 @@ LIBOPUS_SRC := https://github.com/xiph/opus/archive/$(LIBOPUS_VERSION).tar.gz
 LIBAOM_VERSION := master
 LIBAOM_SRC := https://aomedia.googlesource.com/aom/+archive/refs/heads/$(LIBAOM_VERSION).tar.gz
 
-.cache/prereq:
-	@mkdir -p .cache $(DL_DIR) $(SRC_DIR) workspace bin
+$(CACHE_DIR)/prereq:
+	@mkdir -p $(CACHE_DIR) $(DL_DIR) $(SRC_DIR) $(WORKSPACE) $(OUT_BIN_DIR)
 	touch $@
 
 ## yasm
-$(DL_DIR)/yasm-$(YASM_VERSION).tar.gz: .cache/prereq
+$(DL_DIR)/yasm-$(YASM_VERSION).tar.gz: $(CACHE_DIR)/prereq
 	curl -L $(YASM_SRC) -o $@
 
-.cache/yasm: $(DL_DIR)/yasm-$(YASM_VERSION).tar.gz
+$(CACHE_DIR)/yasm: $(DL_DIR)/yasm-$(YASM_VERSION).tar.gz
 	tar -xvf $< -C $(SRC_DIR) && \
 		cd $(SRC_DIR)/yasm-$(YASM_VERSION) && \
 		./configure --prefix=$(WORKSPACE) && \
 		make -j $(JOBS) && \
 		make install && \
-		touch $(DIR)/$@
+		touch $@
 
 ## nasm
-$(DL_DIR)/nasm-$(NASM_VERSION).tar.gz: .cache/prereq
+$(DL_DIR)/nasm-$(NASM_VERSION).tar.gz: $(CACHE_DIR)/prereq
 	curl -L $(NASM_SRC) -o $@ && tar -tvf >/dev/null $@
 
-.cache/nasm: $(DL_DIR)/nasm-$(NASM_VERSION).tar.gz
+$(CACHE_DIR)/nasm: $(DL_DIR)/nasm-$(NASM_VERSION).tar.gz
 	tar -xvf $< -C $(SRC_DIR) && \
 		cd $(SRC_DIR)/nasm-$(NASM_VERSION) && \
 		./autogen.sh && \
 		./configure --prefix=$(WORKSPACE) && \
 		make -j $(JOBS) && \
 		make install && \
-		touch $(DIR)/$@
+		touch $@
 
 ## x264
-$(DL_DIR)/x264-$(X264_VERSION).tar.gz: .cache/prereq
+$(DL_DIR)/x264-$(X264_VERSION).tar.gz: $(CACHE_DIR)/prereq
 	curl -L $(X264_SRC) -o $@ && tar -tvf >/dev/null $@
 
-.cache/x264: $(DL_DIR)/x264-$(X264_VERSION).tar.gz
+$(CACHE_DIR)/x264: $(DL_DIR)/x264-$(X264_VERSION).tar.gz
 	tar -xvf $< -C $(SRC_DIR) && \
 		cd $(SRC_DIR)/x264-$(X264_VERSION) && \
 		./configure --prefix=$(WORKSPACE) --enable-static --enable-pic && \
 		make -j $(JOBS) && \
 		make install && \
-		touch $(DIR)/$@
+		touch $@
 
 ## x265
-$(DL_DIR)/x265-$(X265_VERSION).tar.gz: .cache/prereq
+$(DL_DIR)/x265-$(X265_VERSION).tar.gz: $(CACHE_DIR)/prereq
 	curl -L $(X265_SRC) -o $@ && tar -tvf >/dev/null $@
 
-.cache/x265: $(DL_DIR)/x265-$(X265_VERSION).tar.gz
+$(CACHE_DIR)/x265: $(DL_DIR)/x265-$(X265_VERSION).tar.gz
 	tar -xvf $< -C $(SRC_DIR) && \
 		cd $(SRC_DIR)/multicoreware-x265-* && \
 		cd source && \
 		cmake -DCMAKE_INSTALL_PREFIX=$(WORKSPACE) -DENABLE_SHARED:bool=off . && \
 		make -j $(JOBS) && \
 		make install && \
-		touch $(DIR)/$@
+		touch $@
 
 ## libvpx
-$(DL_DIR)/libvpx-$(LIBVPX_VERSION).tar.gz: .cache/prereq
+$(DL_DIR)/libvpx-$(LIBVPX_VERSION).tar.gz: $(CACHE_DIR)/prereq
 	curl -L $(LIBVPX_SRC) -o $@ && tar -tvf >/dev/null $@
 
-.cache/libvpx: $(DL_DIR)/libvpx-$(LIBVPX_VERSION).tar.gz
+$(CACHE_DIR)/libvpx: $(DL_DIR)/libvpx-$(LIBVPX_VERSION).tar.gz
 	mkdir -p $(SRC_DIR)/libvpx-$(LIBVPX_VERSION)
 	tar -xvf $< -C $(SRC_DIR)/libvpx-$(LIBVPX_VERSION) && \
 		cd $(SRC_DIR)/libvpx-$(LIBVPX_VERSION) && \
 		./configure --prefix=$(WORKSPACE) --disable-examples --disable-unit-tests --enable-vp9-highbitdepth --as=yasm && \
 		make -j $(JOBS) && \
 		make install && \
-		touch $(DIR)/$@
+		touch $@
 
 # libfdk_aac
-$(DL_DIR)/libfdkaac-$(LIBFDKAAC_VERSION).tar.gz: .cache/prereq
+$(DL_DIR)/libfdkaac-$(LIBFDKAAC_VERSION).tar.gz: $(CACHE_DIR)/prereq
 	curl -L $(LIBFDKAAC_SRC) -o $@ && tar -tvf >/dev/null $@
 
-.cache/libfdkaac: $(DL_DIR)/libfdkaac-$(LIBFDKAAC_VERSION).tar.gz
+$(CACHE_DIR)/libfdkaac: $(DL_DIR)/libfdkaac-$(LIBFDKAAC_VERSION).tar.gz
 	tar -xvf $< -C $(SRC_DIR) && \
 		cd $(SRC_DIR)/fdk-aac-$(LIBFDKAAC_VERSION) && \
 		autoreconf -fiv && \
 		./configure --prefix=$(WORKSPACE) --disable-shared && \
 		make -j $(JOBS) && \
 		make install && \
-		touch $(DIR)/$@
+		touch $@
 
 # libmp3lame
-$(DL_DIR)/libmp3lame-$(LIBMP3LAME_VERSION).tar.gz: .cache/prereq
+$(DL_DIR)/libmp3lame-$(LIBMP3LAME_VERSION).tar.gz: $(CACHE_DIR)/prereq
 	curl -L $(LIBMP3LAME_SRC) -o $@ && \
 		tar -tvf >/dev/null $@ || rm -f $@
 
-.cache/libmp3lame: $(DL_DIR)/libmp3lame-$(LIBMP3LAME_VERSION).tar.gz
+$(CACHE_DIR)/libmp3lame: $(DL_DIR)/libmp3lame-$(LIBMP3LAME_VERSION).tar.gz
 	tar -xvf $< -C $(SRC_DIR) && \
 		cd $(SRC_DIR)/lame-$(LIBMP3LAME_VERSION) && \
 		./configure --prefix=$(WORKSPACE) --disable-shared --enable-nasm && \
 		make -j $(JOBS) && \
 		make install && \
-		touch $(DIR)/$@
+		touch $@
 
 # libopus
-$(DL_DIR)/libopus-$(LIBOPUS_VERSION).tar.gz: .cache/prereq
+$(DL_DIR)/libopus-$(LIBOPUS_VERSION).tar.gz: $(CACHE_DIR)/prereq
 	curl -L $(LIBOPUS_SRC) -o $@ && \
 		tar -tvf >/dev/null $@ || rm -f $@
 
-.cache/libopus: $(DL_DIR)/libopus-$(LIBOPUS_VERSION).tar.gz
+$(CACHE_DIR)/libopus: $(DL_DIR)/libopus-$(LIBOPUS_VERSION).tar.gz
 	tar -xvf $< -C $(SRC_DIR) && \
 		cd $(SRC_DIR)/opus-$(LIBOPUS_VERSION) && \
 		./autogen.sh && \
 		./configure --prefix=$(WORKSPACE) --disable-shared && \
 		make -j $(JOBS) && \
 		make install && \
-		touch $(DIR)/$@
+		touch $@
 
 # libaom
-$(DL_DIR)/libaom-$(LIBAOM_VERSION).tar.gz: .cache/prereq
+$(DL_DIR)/libaom-$(LIBAOM_VERSION).tar.gz: $(CACHE_DIR)/prereq
 	curl -L $(LIBAOM_SRC) -o $@ && tar -tvf >/dev/null $@
 
-.cache/libaom: $(DL_DIR)/libaom-$(LIBAOM_VERSION).tar.gz
+$(CACHE_DIR)/libaom: $(DL_DIR)/libaom-$(LIBAOM_VERSION).tar.gz
 	mkdir -p $(SRC_DIR)/aom-$(LIBAOM_VERSION)
 	tar -xvf $< -C $(SRC_DIR)/aom-$(LIBAOM_VERSION) && \
 		mkdir -p $(SRC_DIR)/aom_build && \
@@ -155,15 +155,15 @@ $(DL_DIR)/libaom-$(LIBAOM_VERSION).tar.gz: .cache/prereq
 		cmake -DCMAKE_INSTALL_PREFIX=$(WORKSPACE) -DENABLE_SHARED=off -DENABLE_NASM=on ../aom-$(LIBAOM_VERSION) && \
 		make -j $(JOBS) && \
 		make install && \
-		touch $(DIR)/$@
+		touch $@
 
 
 # ffmpeg
-$(DL_DIR)/ffmpeg-$(FFMPEG_VERSION).tar.gz: .cache/prereq
+$(DL_DIR)/ffmpeg-$(FFMPEG_VERSION).tar.gz: $(CACHE_DIR)/prereq
 	curl -L $(FFMPEG_SRC) -o $@ && \
 		tar -tvf >/dev/null $@ || rm -f $@
 
-$(CACHE_DIR)/ffmpeg: $(DL_DIR)/ffmpeg-$(FFMPEG_VERSION).tar.gz .cache/yasm .cache/nasm .cache/x264 .cache/x265 .cache/libvpx .cache/libfdkaac .cache/libmp3lame .cache/libopus .cache/libaom
+$(CACHE_DIR)/ffmpeg: $(CACHE_DIR)/yasm $(CACHE_DIR)/nasm $(CACHE_DIR)/x264 $(CACHE_DIR)/x265 $(CACHE_DIR)/libvpx $(CACHE_DIR)/libfdkaac $(CACHE_DIR)/libmp3lame $(CACHE_DIR)/libopus $(CACHE_DIR)/libaom $(DL_DIR)/ffmpeg-$(FFMPEG_VERSION).tar.gz
 	tar -xvf $< -C $(SRC_DIR) && \
 		cd $(SRC_DIR)/ffmpeg && \
 		PKG_CONFIG_PATH="$(WORKSPACE)/lib/pkgconfig" ./configure \
@@ -190,12 +190,12 @@ $(CACHE_DIR)/ffmpeg: $(DL_DIR)/ffmpeg-$(FFMPEG_VERSION).tar.gz .cache/yasm .cach
 		touch $@
 
 .PHONY:all
-all: .cache/ffmpeg
+all: $(CACHE_DIR)/ffmpeg
 
 .PHONY: clean
 clean:
-	echo rm -rf $(CACHE_DIR) $(OUT_BIN_DIR)
+	rm -rf $(CACHE_DIR) $(OUT_BIN_DIR)
 
 .PHONY:distclean
 distclean:
-	echo rm -rf $(CACHE_DIR) $(DL_DIR) $(SRC_DIR) $(WORKSPACE) $(OUT_BIN_DIR)
+	rm -rf $(CACHE_DIR) $(DL_DIR) $(SRC_DIR) $(WORKSPACE) $(OUT_BIN_DIR)
