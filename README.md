@@ -19,7 +19,14 @@ Then run:
 make && ls ./bin
 ```
 
-> Several other make builds will run, the `-j` value will be determined by `nproc` output. Use `JOBS` env var to override.
+## Notes
+
+#### Parallel jobs
+
+Top level `make` is running several other `make` builds. The `-j` value will be determined by `nproc` output.
+
+Use `JOBS` env var to override.
+
 
 ## References
 
