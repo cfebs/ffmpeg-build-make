@@ -21,6 +21,14 @@ make && ls ./bin
 
 ## Notes
 
+#### Docker test
+
+```
+make docker
+docker run --rm -it ffmpeg-make:latest bash
+$ make all
+```
+
 #### Parallel jobs
 
 Top level `make` is running several other `make` builds. The `-j` value will be determined by `nproc` output.

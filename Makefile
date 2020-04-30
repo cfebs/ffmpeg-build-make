@@ -1,3 +1,4 @@
+SHELL := /bin/bash
 JOBS := $(shell nproc)
 WORKSPACE := $(PWD)/workspace
 DIR := $(PWD)/
@@ -42,6 +43,7 @@ $(CACHE_DIR)/prereq:
 	hash -r curl
 	hash -r make
 	hash -r autoreconf
+	hash -r cmake
 	touch $@
 
 ## yasm
@@ -76,8 +78,9 @@ $(DL_DIR)/x264-$(X264_VERSION).tar.gz: $(CACHE_DIR)/prereq
 $(CACHE_DIR)/x264: $(DL_DIR)/x264-$(X264_VERSION).tar.gz
 	tar -xvf $< -C $(SRC_DIR) && \
 		cd $(SRC_DIR)/x264-$(X264_VERSION) && \
-		./configure --prefix=$(WORKSPACE) --enable-static --enable-pic && \
-		make -j $(JOBS) && \
+		PATH="$(WORKSPACE)/bin:$(PATH)" PKG_CONFIG_PATH="$(WORKSPACE)/lib/pkgconfig" \
+		./configure --prefix=$(WORKSPACE) --bindir=$(WORKSPACE)/bin --enable-static --enable-pic && \
+		PATH="$(WORKSPACE)/bin:$(PATH)" make -j $(JOBS) && \
 		make install && \
 		touch $@
 
@@ -89,8 +92,8 @@ $(CACHE_DIR)/x265: $(DL_DIR)/x265-$(X265_VERSION).tar.gz
 	tar -xvf $< -C $(SRC_DIR) && \
 		cd $(SRC_DIR)/multicoreware-x265-* && \
 		cd source && \
-		cmake -DCMAKE_INSTALL_PREFIX=$(WORKSPACE) -DENABLE_SHARED:bool=off . && \
-		make -j $(JOBS) && \
+		PATH="$(WORKSPACE)/bin:$(PATH)" cmake -DCMAKE_INSTALL_PREFIX=$(WORKSPACE) -DENABLE_SHARED:bool=off . && \
+		PATH="$(WORKSPACE)/bin:$(PATH)" make -j $(JOBS) && \
 		make install && \
 		touch $@
 
@@ -102,8 +105,8 @@ $(CACHE_DIR)/libvpx: $(DL_DIR)/libvpx-$(LIBVPX_VERSION).tar.gz
 	mkdir -p $(SRC_DIR)/libvpx-$(LIBVPX_VERSION)
 	tar -xvf $< -C $(SRC_DIR)/libvpx-$(LIBVPX_VERSION) && \
 		cd $(SRC_DIR)/libvpx-$(LIBVPX_VERSION) && \
-		./configure --prefix=$(WORKSPACE) --disable-examples --disable-unit-tests --enable-vp9-highbitdepth --as=yasm && \
-		make -j $(JOBS) && \
+		PATH="$(WORKSPACE)/bin:$(PATH)" ./configure --prefix=$(WORKSPACE) --disable-examples --disable-unit-tests --enable-vp9-highbitdepth --as=yasm && \
+		PATH="$(WORKSPACE)/bin:$(PATH)" make -j $(JOBS) && \
 		make install && \
 		touch $@
 
@@ -128,8 +131,8 @@ $(DL_DIR)/libmp3lame-$(LIBMP3LAME_VERSION).tar.gz: $(CACHE_DIR)/prereq
 $(CACHE_DIR)/libmp3lame: $(DL_DIR)/libmp3lame-$(LIBMP3LAME_VERSION).tar.gz
 	tar -xvf $< -C $(SRC_DIR) && \
 		cd $(SRC_DIR)/lame-$(LIBMP3LAME_VERSION) && \
-		./configure --prefix=$(WORKSPACE) --disable-shared --enable-nasm && \
-		make -j $(JOBS) && \
+		PATH="$(WORKSPACE)/bin:$(PATH)" ./configure --prefix=$(WORKSPACE) --disable-shared --enable-nasm && \
+		PATH="$(WORKSPACE)/bin:$(PATH)" make -j $(JOBS) && \
 		make install && \
 		touch $@
 
@@ -156,8 +159,8 @@ $(CACHE_DIR)/libaom: $(DL_DIR)/libaom-$(LIBAOM_VERSION).tar.gz
 	tar -xvf $< -C $(SRC_DIR)/aom-$(LIBAOM_VERSION) && \
 		mkdir -p $(SRC_DIR)/aom_build && \
 		cd $(SRC_DIR)/aom_build && \
-		cmake -DCMAKE_INSTALL_PREFIX=$(WORKSPACE) -DENABLE_SHARED=off -DENABLE_NASM=on ../aom-$(LIBAOM_VERSION) && \
-		make -j $(JOBS) && \
+		PATH="$(WORKSPACE)/bin:$(PATH)" cmake -DCMAKE_INSTALL_PREFIX=$(WORKSPACE) -DENABLE_SHARED=off -DENABLE_NASM=on -DENABLE_TESTS=0 ../aom-$(LIBAOM_VERSION) && \
+		PATH="$(WORKSPACE)/bin:$(PATH)" make -j $(JOBS) && \
 		make install && \
 		touch $@
 
@@ -170,7 +173,7 @@ $(DL_DIR)/ffmpeg-$(FFMPEG_VERSION).tar.gz: $(CACHE_DIR)/prereq
 $(CACHE_DIR)/ffmpeg: $(DL_DIR)/ffmpeg-$(FFMPEG_VERSION).tar.gz | $(CACHE_DIR)/yasm $(CACHE_DIR)/nasm $(CACHE_DIR)/x264 $(CACHE_DIR)/x265 $(CACHE_DIR)/libvpx $(CACHE_DIR)/libfdkaac $(CACHE_DIR)/libmp3lame $(CACHE_DIR)/libopus $(CACHE_DIR)/libaom
 	tar -xvf $< -C $(SRC_DIR) && \
 		cd $(SRC_DIR)/ffmpeg && \
-		PKG_CONFIG_PATH="$(WORKSPACE)/lib/pkgconfig" ./configure \
+		PATH="$(WORKSPACE)/bin:$(PATH)" PKG_CONFIG_PATH="$(WORKSPACE)/lib/pkgconfig" ./configure \
 		  --prefix="$(WORKSPACE)" \
 		  --pkg-config-flags="--static" \
 		  --extra-cflags="-I$(WORKSPACE)/include" \
@@ -189,12 +192,19 @@ $(CACHE_DIR)/ffmpeg: $(DL_DIR)/ffmpeg-$(FFMPEG_VERSION).tar.gz | $(CACHE_DIR)/ya
 		  --enable-libx264 \
 		  --enable-libx265 \
 		  --enable-nonfree && \
-		make -j $(JOBS) && \
+		PATH="$(WORKSPACE)/bin:$(PATH)" make -j $(JOBS) && \
 		make install && \
 		touch $@
 
+$(CACHE_DIR)/docker: Dockerfile Makefile $(CACHE_DIR)/prereq
+	docker build -f Dockerfile -t ffmpeg-make:latest . \
+		&& touch $@
+
 .PHONY:all
 all: $(CACHE_DIR)/ffmpeg
+
+.PHONY:docker
+docker: $(CACHE_DIR)/docker
 
 .PHONY: clean
 clean:
