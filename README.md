@@ -29,12 +29,20 @@ docker run --rm -it ffmpeg-make:latest bash
 $ make all
 ```
 
+To itterate without re downloading source, mount the .dl cache like so:
+
+```
+make docker
+docker run --rm -it -v $PWD/.dl:/app.dl ffmpeg-make:latest bash`
+$ make cachedl  # touches dl files so make won't redownload
+$ make all
+```
+
 #### Parallel jobs
 
 Top level `make` is running several other `make` builds. The `-j` value will be determined by `nproc` output.
 
 Use `JOBS` env var to override.
-
 
 ## References
 

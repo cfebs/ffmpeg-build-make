@@ -210,6 +210,12 @@ docker: $(CACHE_DIR)/docker
 clean:
 	rm -rf $(CACHE_DIR) $(OUT_BIN_DIR)
 
+.PHONY: cachedl
+cachedl: $(CACHE_DIR)/prereq
+	# ensures dls are newer than the prereq and wont
+	# be downloaded again
+	touch $(DL_DIR)/*
+
 .PHONY:distclean
 distclean:
 	rm -rf $(CACHE_DIR) $(DL_DIR) $(SRC_DIR) $(WORKSPACE) $(OUT_BIN_DIR)
