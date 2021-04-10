@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-JOBS := $(shell nproc)
+JOBS := $(shell python3 -c 'import os; print(os.cpu_count())')
 WORKSPACE := $(PWD)/workspace
 DIR := $(PWD)/
 CACHE_DIR := $(PWD)/.cache
@@ -13,14 +13,14 @@ FFMPEG_SRC := https://ffmpeg.org/releases/ffmpeg-$(FFMPEG_VERSION).tar.bz2
 YASM_VERSION := 1.3.0
 YASM_SRC := http://www.tortall.net/projects/yasm/releases/yasm-$(YASM_VERSION).tar.gz
 
-NASM_VERSION := 2.14.02
+NASM_VERSION := 2.15.05
 NASM_SRC := https://www.nasm.us/pub/nasm/releasebuilds/$(NASM_VERSION)/nasm-$(NASM_VERSION).tar.gz
 
 X264_VERSION := master
 X264_SRC := https://code.videolan.org/videolan/x264/-/archive/$(X264_VERSION)/x264-$(X264_VERSION).tar.gz
 
-X265_VERSION := default
-X265_SRC := https://bitbucket.org/multicoreware/x265/get/$(X265_VERSION).tar.gz
+X265_VERSION := master
+X265_SRC := https://bitbucket.org/multicoreware/x265_git/get/$(X264_VERSION).tar.gz
 
 LIBVPX_VERSION := master
 LIBVPX_SRC := https://chromium.googlesource.com/webm/libvpx.git/+archive/refs/heads/$(LIBVPX_VERSION).tar.gz
@@ -90,7 +90,7 @@ $(DL_DIR)/x265-$(X265_VERSION).tar.gz: $(CACHE_DIR)/prereq
 
 $(CACHE_DIR)/x265: $(DL_DIR)/x265-$(X265_VERSION).tar.gz
 	tar -xvf $< -C $(SRC_DIR) && \
-		cd $(SRC_DIR)/multicoreware-x265-* && \
+		cd $(SRC_DIR)/multicoreware-x265* && \
 		cd source && \
 		PATH="$(WORKSPACE)/bin:$(PATH)" cmake -DCMAKE_INSTALL_PREFIX=$(WORKSPACE) -DENABLE_SHARED:bool=off . && \
 		PATH="$(WORKSPACE)/bin:$(PATH)" make -j $(JOBS) && \
@@ -205,6 +205,7 @@ all: $(CACHE_DIR)/ffmpeg
 
 .PHONY:docker
 docker: $(CACHE_DIR)/docker
+	@mkdir -p ./bin
 
 .PHONY: clean
 clean:
